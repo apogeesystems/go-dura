@@ -136,7 +136,7 @@ func (c *Config) SaveToPath(filename string) (err error) {
 	return config.WriteConfigAs(filename)
 }
 
-func (c *Config) SetWatch(path string, config WatchConfig) (err error) {
+func (c *Config) SetWatch(path string, cfg WatchConfig) (err error) {
 	var fileInfo os.FileInfo
 	if fileInfo, err = os.Stat(path); err != nil {
 		return
@@ -144,17 +144,19 @@ func (c *Config) SetWatch(path string, config WatchConfig) (err error) {
 	if !fileInfo.IsDir() {
 		return errors.New(fmt.Sprintf("path '%s' is not a directory", path))
 	}
-	var repos *viper.Viper
-	if repos = c.Sub("repos"); repos == nil {
+	if c.Repositories != nil {
+		var ok bool
+		if _, ok = c.Repositories[path]; !ok {
+			c.Repositories[path] = cfg
+			if err = c.Save(); err != nil {
+				return
+			}
+			fmt.Printf("Now watching %s\n", path)
+		} else {
+			fmt.Printf("%s already being watched\n", path)
+		}
+	} else {
 		return errors.New("no repositories set in config")
-	}
-	if repos.IsSet(path) {
-		fmt.Printf("repository with path '%s' is already being watched\n", path)
-		return
-	}
-	c.Repositories[path] = config
-	if err = c.Save(); err != nil {
-		return
 	}
 	return
 }
@@ -167,22 +169,21 @@ func (c *Config) SetUnwatch(path string) (err error) {
 	if !fileInfo.IsDir() {
 		return errors.New(fmt.Sprintf("path '%s' is not a directory", path))
 	}
-	var repos *viper.Viper
-	if repos = c.Sub("repos"); repos == nil {
+	if c.Repositories != nil {
+		var ok bool
+		if _, ok = c.Repositories[path]; ok {
+			delete(c.Repositories, path)
+			if err = c.Save(); err != nil {
+				return
+			}
+			fmt.Printf("Stopped watching %s\n", path)
+		} else {
+			fmt.Printf("%s is not being watched\n", path)
+		}
+	} else {
 		return errors.New("no repositories set in config")
 	}
-	if repos.IsSet(path) {
-		if _, ok := c.Repositories[path]; ok {
-			delete(c.Repositories, path)
-		}
-		if err = c.Save(); err != nil {
-			return
-		}
-		fmt.Printf("Stopped watching %s\n", path)
-		return
-	} else {
-		return errors.New(fmt.Sprintf("%s is not being watched", path))
-	}
+	return
 }
 
 func (c *Config) GitRepos() (repos map[string]WatchConfig) {
