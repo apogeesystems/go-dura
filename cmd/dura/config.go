@@ -152,7 +152,10 @@ func (c *Config) SetWatch(path string, config WatchConfig) (err error) {
 		fmt.Printf("repository with path '%s' is already being watched\n", path)
 		return
 	}
-	c.Set(fmt.Sprintf("repos.%s", path), config)
+	c.Repositories[path] = config
+	if err = c.Save(); err != nil {
+		return
+	}
 	return
 }
 
@@ -171,6 +174,9 @@ func (c *Config) SetUnwatch(path string) (err error) {
 	if repos.IsSet(path) {
 		if _, ok := c.Repositories[path]; ok {
 			delete(c.Repositories, path)
+		}
+		if err = c.Save(); err != nil {
+			return
 		}
 		fmt.Printf("Stopped watching %s\n", path)
 		return
