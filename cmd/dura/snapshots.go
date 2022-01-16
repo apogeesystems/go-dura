@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package utils
+package dura
 
 import (
 	"errors"
@@ -208,12 +208,32 @@ func findHead(repo *git.Repository, branchName string) (head *git.Commit, err er
 	return
 }
 
-// TODO finish implementation (need dura config?)
-func getGitAuthor(repo *git.Repository) (author string, err error) {
-	return "dura", nil
+func getGitAuthor(repo *git.Repository) (author string) {
+	if config.Commit.Author != nil {
+		author = *config.Commit.Author
+		return
+	}
+	if !config.Commit.ExcludeGitConfig {
+		var signature *git.Signature
+		if signature, err = repo.DefaultSignature(); err == nil {
+			author = signature.Name
+			return
+		}
+	}
+	return "dura"
 }
 
-// TODO finish implementation (need dura config?)
-func getGitEmail(repo *git.Repository) (email string, err error) {
-	return "dura@github.io", nil
+func getGitEmail(repo *git.Repository) (email string) {
+	if config.Commit.Email != nil {
+		email = *config.Commit.Email
+		return
+	}
+	if !config.Commit.ExcludeGitConfig {
+		var signature *git.Signature
+		if signature, err = repo.DefaultSignature(); err == nil {
+			email = signature.Email
+			return
+		}
+	}
+	return "dura@github.io"
 }
