@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/apogeesystems/go-dura/cmd/dura"
 
 	"github.com/spf13/cobra"
 )
@@ -27,10 +28,18 @@ var captureCmd = &cobra.Command{
 	Short: "Run a single backup of an entire repository.",
 	Long:  `Run a single backup of an entire repository. This is the one single iteration of the 'serve'' control loop.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		var cs *dura.CaptureStatus
 		if len(args) == 0 { // Use CWD
-
+			cs, err = dura.Capture(CWD)
+			cobra.CheckErr(err)
+			fmt.Println(cs.CommitHash)
 		} else { // Use paths provided
-
+			var path string
+			for _, path = range args {
+				cs, err = dura.Capture(path)
+				cobra.CheckErr(err)
+				fmt.Println(cs.CommitHash)
+			}
 		}
 		fmt.Println("capture called")
 	},
