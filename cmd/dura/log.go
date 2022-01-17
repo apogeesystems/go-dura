@@ -1,7 +1,7 @@
 package dura
 
 type Operation struct {
-	Snapshot OperationSnapshot
+	Snapshot OperationSnapshot `json:"snapshot"`
 }
 
 type OperationSnapshot struct {
