@@ -5,10 +5,10 @@ type Operation struct {
 }
 
 type OperationSnapshot struct {
-	repo    string
-	op      *CaptureStatus
-	error   error
-	latency float32
+	repo    string         `json:"repo"`
+	op      *CaptureStatus `json:"op,omitempty"`
+	error   error          `json:"error,omitempty"`
+	latency float32        `json:"latency"`
 }
 
 func (o *Operation) ShouldLog() bool {
