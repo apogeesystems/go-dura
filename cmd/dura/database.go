@@ -44,7 +44,7 @@ func InitDatabase() {
 func readInRuntime(path *string) (err error) {
 	if path == nil {
 		if err = dbViper.ReadInConfig(); err == nil {
-			fmt.Fprintln(os.Stderr, "Runtime file loaded: ", viper.ConfigFileUsed())
+			//fmt.Fprintln(os.Stderr, "Runtime file loaded: ", viper.ConfigFileUsed())
 		} else {
 			return
 		}
