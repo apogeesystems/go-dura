@@ -16,8 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/apogeesystems/go-dura/cmd/dura"
 	"github.com/spf13/cobra"
 )
 
@@ -32,9 +31,13 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("serve called")
+		dura.StartPoller()
 	},
 }
+
+var (
+	logfile string
+)
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
@@ -48,4 +51,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	serveCmd.Flags().StringVarP(&logfile, "logfile", "l", "", `Setting this flag allows for directing Dura logs to the provided logfile destination.`)
 }
