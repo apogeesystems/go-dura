@@ -22,9 +22,9 @@ import (
 )
 
 type CaptureStatus struct {
-	DuraBranch string
-	CommitHash string
-	BaseHash   string
+	DuraBranch string `json:"dura_branch"`
+	CommitHash string `json:"commit_hash"`
+	BaseHash   string `json:"base_hash"`
 }
 
 func (cs *CaptureStatus) Display() (err error) {
