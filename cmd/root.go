@@ -54,6 +54,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(dura.InitConfig)
+	cobra.OnInitialize(dura.InitDatabase)
 
 	// Get current working directory
 	CWD, err = os.Getwd()
