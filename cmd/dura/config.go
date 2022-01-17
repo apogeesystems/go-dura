@@ -15,6 +15,8 @@ var (
 	configHome string
 	config     Config
 	err        error
+	configType = "toml"
+	configName = ".go-dura"
 )
 
 func GetConfig() (config *Config) {
@@ -23,7 +25,7 @@ func GetConfig() (config *Config) {
 
 func InitConfig() {
 	config = Config{
-		Viper: viper.GetViper(),
+		//Viper: viper.GetViper(),
 		Commit: CommitConfig{
 			ExcludeGitConfig: false,
 		},
@@ -35,46 +37,55 @@ func InitConfig() {
 		log.Fatalln(err)
 	}
 
-	config.SetEnvPrefix("dura")
+	viper.SetEnvPrefix("dura")
 
 	if tmp := os.Getenv("DURA_CONFIG_HOME"); tmp != "" {
 		configHome = tmp
 	}
 
 	// Search config in home directory with name ".go-dura" (without extension).
-	config.AddConfigPath(configHome)
-	config.SetConfigType("yaml")
-	config.SetConfigName(".go-dura")
+	viper.AddConfigPath(configHome)
+	viper.SetConfigType(configType)
+	viper.SetConfigName(configName)
 
-	config.SetDefault("commit", map[string]interface{}{
+	viper.SetDefault("commit", map[string]interface{}{
 		"author":             nil,
 		"email":              nil,
 		"exclude_git_config": false,
 	})
-	config.SetDefault("repositories", map[string]WatchConfig{})
+	viper.SetDefault("dura.sleep_seconds", 5)
 
-	config.AutomaticEnv() // read in environment variables that match
+	viper.AutomaticEnv() // read in environment variables that match
 
-	config.OnConfigChange(func(e fsnotify.Event) {
+	viper.OnConfigChange(func(e fsnotify.Event) {
 		readInConfig()
 	})
-	config.WatchConfig()
+	viper.WatchConfig()
 
 	// If a config file is found, read it in.
 	readInConfig()
 }
 
-func readInConfig() {
-	if err = config.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file: ", config.ConfigFileUsed())
+func readInConfig() (err error) {
+	if err = viper.ReadInConfig(); err == nil {
+		fmt.Fprintln(os.Stderr, "Config file loaded: ", viper.ConfigFileUsed())
+	} else {
+		log.Fatal(err)
 	}
-	config.Unmarshal(&config)
+	//fmt.Printf("%+v", viper.Get("repos"))
+	if err = viper.Unmarshal(&config); err != nil {
+		log.Fatal(err)
+	}
+	//fmt.Printf("%+v\n\n", config)
+	//fmt.Printf("%s\n%s\n%+v\n\n", *config.Commit.Author, *config.Commit.Email, config.Commit.ExcludeGitConfig)
+	//fmt.Printf("%+v\n\n", config.Repositories)
+	return
 }
 
 type WatchConfig struct {
-	Include  []string
-	Exclude  []string
-	MaxDepth int
+	Include  []string `toml:"include" mapstructure:"include,omitempty"`
+	Exclude  []string `toml:"exclude" mapstructure:"exclude,omitempty"`
+	MaxDepth int      `toml:"max_depth" mapstructure:"max_depth,omitempty"`
 }
 
 func NewWatchConfig() (wc *WatchConfig) {
@@ -86,18 +97,23 @@ func NewWatchConfig() (wc *WatchConfig) {
 }
 
 type Config struct {
-	*viper.Viper
-	Commit       CommitConfig           `mapstructure:"commit"`
-	Repositories map[string]WatchConfig `mapstructure:"repos,omitempty"`
+	Dura         DuraConfig             `toml:"dura"`
+	Commit       CommitConfig           `toml:"commit"`
+	Repositories map[string]WatchConfig `toml:"repos" mapstructure:"repos"`
+}
+
+type DuraConfig struct {
+	SleepSeconds int `toml:"sleep_seconds" mapstructure:"sleep_seconds"`
 }
 
 type CommitConfig struct {
-	Author           *string `mapstructure:"author,omitempty"`
-	Email            *string `mapstructure:"email,omitempty"`
-	ExcludeGitConfig bool    `mapstructure:"exclude_git_config"`
+	Author           *string `toml:"author"`
+	Email            *string `toml:"email"`
+	ExcludeGitConfig bool    `toml:"exclude_git_config"`
 }
 
 func (c *Config) Empty() {
+	c.Dura.SleepSeconds = 5
 	c.Commit.ExcludeGitConfig = false
 	c.Commit.Author = nil
 	c.Commit.Email = nil
@@ -105,7 +121,7 @@ func (c *Config) Empty() {
 }
 
 func (c *Config) DefaultPath() (path string) {
-	return strings.TrimRight(c.GetDuraConfigHome(), "/") + "/.go-dura.yaml"
+	return strings.TrimRight(c.GetDuraConfigHome(), "/") + fmt.Sprintf("/%s.%s", configName, configType)
 }
 
 func (c *Config) GetDuraConfigHome() (path string) {
@@ -113,7 +129,7 @@ func (c *Config) GetDuraConfigHome() (path string) {
 }
 
 func (c *Config) Load() {
-	config.ReadInConfig()
+	viper.ReadInConfig()
 }
 
 func (c *Config) LoadFile(filepath string) (err error) {
@@ -121,11 +137,11 @@ func (c *Config) LoadFile(filepath string) (err error) {
 	if file, err = os.Open(filepath); err != nil {
 		return
 	}
-	return config.ReadConfig(file)
+	return viper.ReadConfig(file)
 }
 
 func (c *Config) Save() (err error) {
-	return config.WriteConfig()
+	return viper.WriteConfig()
 }
 
 func (c *Config) CreateDir(path string) (err error) {
@@ -133,7 +149,7 @@ func (c *Config) CreateDir(path string) (err error) {
 }
 
 func (c *Config) SaveToPath(filename string) (err error) {
-	return config.WriteConfigAs(filename)
+	return viper.WriteConfigAs(filename)
 }
 
 func (c *Config) SetWatch(path string, cfg WatchConfig) (err error) {
