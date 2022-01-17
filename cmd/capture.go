@@ -30,6 +30,7 @@ var captureCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var cs *dura.CaptureStatus
 		if len(args) == 0 { // Use CWD
+			fmt.Println(CWD)
 			cs, err = dura.Capture(CWD)
 			cobra.CheckErr(err)
 			fmt.Println(cs.CommitHash)
@@ -41,7 +42,6 @@ var captureCmd = &cobra.Command{
 				fmt.Println(cs.CommitHash)
 			}
 		}
-		fmt.Println("capture called")
 	},
 	Version: "0.0.1",
 }
