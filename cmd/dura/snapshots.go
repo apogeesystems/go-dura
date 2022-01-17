@@ -18,7 +18,7 @@ package dura
 import (
 	"errors"
 	"fmt"
-	git "github.com/libgit2/git2go"
+	git "github.com/libgit2/git2go/v33"
 )
 
 type CaptureStatus struct {
@@ -125,9 +125,9 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		diffOpts  git.DiffOptions
 		deltas    int
 	)
-	if oldTree, err = head.AsTree(); err != nil {
+	if oldTree, err = head.Tree(); err != nil {
 		if branchCommit != nil {
-			if oldTree, err = branchCommit.AsTree(); err != nil {
+			if oldTree, err = branchCommit.Tree(); err != nil {
 				return
 			}
 		}
@@ -180,6 +180,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		tree,
 		commit,
 	); err != nil {
+		fmt.Println("repo.CreateCommit failed")
 		return
 	}
 
