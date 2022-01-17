@@ -11,12 +11,13 @@ import (
 )
 
 var (
-	configFile string
-	configHome string
-	config     Config
-	err        error
-	configType = "toml"
-	configName = ".go-dura"
+	configFile      string
+	configHome      string
+	config          Config
+	err             error
+	configType      = "toml"
+	configName      = ".go-dura"
+	DefSleepSeconds = 5
 )
 
 func GetConfig() (config *Config) {
@@ -53,7 +54,7 @@ func InitConfig() {
 		"email":              nil,
 		"exclude_git_config": false,
 	})
-	viper.SetDefault("dura.sleep_seconds", 5)
+	viper.SetDefault("dura.sleep_seconds", DefSleepSeconds)
 
 	viper.AutomaticEnv() // read in environment variables that match
 
