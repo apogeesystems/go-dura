@@ -145,7 +145,6 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			return
 		}
 		fmt.Sprintf("REFERENCE ID: %s\n", cc.Id().String())
-
 	} else {
 		fmt.Println(err)
 	}
