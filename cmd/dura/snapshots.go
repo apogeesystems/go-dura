@@ -121,10 +121,6 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			if branch, err = repo.CreateBranch(branchName, head, false); err != nil {
 				return
 			}
-			var name string
-			if name, err = branch.Name(); err != nil {
-				return
-			}
 			var commitObj *git.Object
 			if commitObj, err = branch.Peel(git.ObjectCommit); err != nil {
 				return
@@ -138,6 +134,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	}
 
 	var ref *git.Reference
+	fmt.Printf("Looking for ref: /refs/head/%s\n", branchName)
 	if ref, err = repo.References.Lookup(fmt.Sprintf("refs/head/%s", branchName)); err == nil {
 		var ob *git.Object
 		if ob, err = ref.Peel(git.ObjectCommit); err != nil {
@@ -148,6 +145,9 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			return
 		}
 		fmt.Sprintf("REFERENCE ID: %s\n", cc.Id().String())
+
+	} else {
+		fmt.Println(err)
 	}
 
 	var index *git.Index
