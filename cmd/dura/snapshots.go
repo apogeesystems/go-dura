@@ -90,16 +90,21 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		return
 	}
 
+	// Get the repo HEAD, peel to the latest Commit as "head"
 	if head, err = headPeelToCommit(repo); err != nil {
 		return
 	}
 
 	if statusCheckPass, err = statusCheck(repo); err != nil || !statusCheckPass {
+		if err == nil {
+			err = errors.New("repository did not pass status check, i.e. status list was empty for the repository")
+		}
 		return
 	}
 
 	if head.Id() != nil {
 		branchName = fmt.Sprintf("dura/%s", head.Id().String())
+		fmt.Printf("HEAD branch ID: %s\n", head.Id().String())
 	} else {
 		return nil, errors.New("head.Id() was nil")
 	}
@@ -109,6 +114,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		if _, err = repo.CreateBranch(branchName, head, false); err != nil {
 			return
 		}
+		fmt.Printf("Created branch %s...\n", branchName)
 	}
 
 	var index *git.Index
@@ -125,14 +131,26 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		diffOpts  git.DiffOptions
 		deltas    int
 	)
-	if oldTree, err = head.Tree(); err != nil {
-		if branchCommit != nil {
-			if oldTree, err = branchCommit.Tree(); err != nil {
+	if branchCommit != nil {
+		if oldTree, err = branchCommit.Tree(); err != nil {
+			if oldTree, err = head.Tree(); err != nil {
 				return
 			}
 		}
-		return
+	} else {
+		if oldTree, err = head.Tree(); err != nil {
+			return
+		}
 	}
+	//if oldTree, err = head.Tree(); err != nil {
+	//	if branchCommit != nil {
+	//		if oldTree, err = branchCommit.Tree(); err != nil {
+	//			return
+	//		}
+	//	}
+	//	return
+	//}
+
 	if diffOpts, err = git.DefaultDiffOptions(); err != nil {
 		return
 	}
@@ -146,6 +164,9 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		return
 	}
 	if deltas, err = dirtyDiff.NumDeltas(); err != nil || deltas == 0 {
+		if err == nil {
+			err = errors.New("dirtyDiff has zero deltas")
+		}
 		return
 	}
 
@@ -181,6 +202,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		commit,
 	); err != nil {
 		fmt.Println("repo.CreateCommit failed")
+		fmt.Println(err)
 		return
 	}
 
@@ -198,6 +220,7 @@ func findHead(repo *git.Repository, branchName string) (head *git.Commit, err er
 	if branch, err = repo.LookupBranch(branchName, git.BranchLocal); err != nil {
 		return
 	} else {
+		fmt.Printf("Branch %s found...\n", branchName)
 		var headObj *git.Object
 		if headObj, err = branch.Peel(git.ObjectCommit); err != nil {
 			return
