@@ -127,6 +127,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			fmt.Printf("Created branch %s...\n", branchName)
 			fmt.Printf("Branch commit ID: %s\n", branchCommit.Id().String())
 		}
+
 	}
 
 	var index *git.Index
