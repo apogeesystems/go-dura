@@ -31,7 +31,7 @@ func processDirectory(currentPath string) (err error) {
 
 	if operation.ShouldLog() {
 		var bytes []byte
-		if bytes, err = json.MarshalIndent(operation, "", "  "); err != nil {
+		if bytes, err = json.MarshalIndent(operation.Snapshot, "", "  "); err != nil {
 			return
 		}
 		fmt.Println(string(bytes))
