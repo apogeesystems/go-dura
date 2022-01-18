@@ -147,14 +147,6 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			return
 		}
 	}
-	//if oldTree, err = head.Tree(); err != nil {
-	//	if branchCommit != nil {
-	//		if oldTree, err = branchCommit.Tree(); err != nil {
-	//			return
-	//		}
-	//	}
-	//	return
-	//}
 
 	if diffOpts, err = git.DefaultDiffOptions(); err != nil {
 		return
@@ -198,9 +190,9 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		oid    *git.Oid
 		commit = head
 	)
-	//if branchCommit != nil {
-	//	commit = branchCommit
-	//}
+	if branchCommit != nil {
+		commit = branchCommit
+	}
 
 	if oid, err = repo.CreateCommit(
 		fmt.Sprintf("refs/head/%s", branchName),
@@ -239,6 +231,7 @@ func findHead(repo *git.Repository, branchName string) (head *git.Commit, err er
 		if head, err = headObj.AsCommit(); err != nil {
 			return
 		}
+		fmt.Printf("branchCommit head commit ID: %s\n", head.Id().String())
 	}
 	return
 }
