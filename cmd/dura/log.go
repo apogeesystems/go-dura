@@ -7,7 +7,7 @@ type Operation struct {
 type OperationSnapshot struct {
 	Repo    string         `json:"repo"`
 	Op      *CaptureStatus `json:"op,omitempty"`
-	Error   error          `json:"error,omitempty"`
+	Error   *string        `json:"error,omitempty"`
 	Latency float32        `json:"latency"`
 }
 
