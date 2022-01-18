@@ -19,8 +19,9 @@ func processDirectory(currentPath string) (err error) {
 	)
 	start := time.Now()
 	op, err = Capture(currentPath)
-	fmt.Printf("%+v\n", op)
+	op.Display()
 	latency := float32(time.Since(start))
+	fmt.Printf("Latency: %d\n", latency)
 
 	operation = Operation{OperationSnapshot{
 		repo:    currentPath,
@@ -58,7 +59,7 @@ func doTask() {
 	for repo, _ = range config.GitRepos() {
 		fmt.Printf("\nProcessing: '%s'\n", repo)
 		if err = processDirectory(repo); err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
+			fmt.Fprintf(os.Stderr, "ERROR: %s\n", err.Error())
 		}
 	}
 }
