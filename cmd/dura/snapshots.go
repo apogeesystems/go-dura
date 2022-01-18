@@ -21,6 +21,10 @@ import (
 	git "github.com/libgit2/git2go/v33"
 )
 
+var (
+	latest = map[string]*git.Oid{}
+)
+
 type CaptureStatus struct {
 	DuraBranch string `json:"dura_branch"`
 	CommitHash string `json:"commit_hash"`
@@ -183,7 +187,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		treeOid *git.Oid
 		tree    *git.Tree
 	)
-	if treeOid, err = index.WriteTree(); err != nil {
+	if treeOid, err = index.WriteTreeTo(repo); err != nil {
 		return
 	}
 	if tree, err = repo.LookupTree(treeOid); err != nil {
@@ -205,11 +209,12 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	} else {
 		fmt.Println("Assigning head as parent")
 	}
-
-	//o, _ := git.NewOid("5e4abae6c281feb0b26e18b7465b91367dd3571d")
-	//if commit, err = repo.LookupCommit(o); err != nil {
-	//	return
-	//}
+	var ok bool
+	if oid, ok = latest[path]; ok {
+		if commit, err = repo.LookupCommit(oid); err != nil {
+			return
+		}
+	}
 
 	if oid, err = repo.CreateCommit(
 		fmt.Sprintf("refs/head/%s", branchName),
@@ -223,6 +228,8 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		fmt.Println(err)
 		return
 	}
+
+	latest[path] = oid
 
 	fmt.Println("repo.CreateCommit successful")
 
