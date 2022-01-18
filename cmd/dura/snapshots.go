@@ -52,6 +52,7 @@ func statusCheck(repo *git.Repository) (ok bool, err error) {
 		return
 	}
 	if count > 0 {
+		fmt.Printf("%d diffs found...\n", count)
 		ok = true
 	} else {
 		ok = false
@@ -108,7 +109,9 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	} else {
 		return nil, errors.New("head.Id() was nil")
 	}
-	branchCommit, _ = findHead(repo, branchName)
+	if branchCommit, err = findHead(repo, branchName); err != nil {
+		return
+	}
 
 	if _, err = repo.LookupBranch(branchName, git.BranchLocal); err != nil {
 		if _, err = repo.CreateBranch(branchName, head, false); err != nil {
