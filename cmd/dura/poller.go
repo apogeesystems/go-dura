@@ -19,6 +19,7 @@ func processDirectory(currentPath string) (err error) {
 	)
 	start := time.Now()
 	op, err = Capture(currentPath)
+	fmt.Printf("%+v\n", op)
 	latency := float32(time.Since(start))
 
 	operation = Operation{OperationSnapshot{
