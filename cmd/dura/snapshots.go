@@ -140,6 +140,20 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		}
 	}
 
+	var ref *git.Reference
+	if ref, err = repo.References.Lookup(fmt.Sprintf("refs/head/%s", branchName)); err != nil {
+		return
+	}
+	var ob *git.Object
+	if ob, err = ref.Peel(git.ObjectCommit); err != nil {
+		return
+	}
+	var cc *git.Commit
+	if cc, err = ob.AsCommit(); err != nil {
+		return
+	}
+	fmt.Sprintf("REFERENCE ID: %s\n", cc.Id().String())
+
 	var index *git.Index
 	if index, err = repo.Index(); err != nil {
 		return
