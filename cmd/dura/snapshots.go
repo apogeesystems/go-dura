@@ -109,10 +109,19 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	} else {
 		return nil, errors.New("head.Id() was nil")
 	}
+
 	if branchCommit, err = findHead(repo, branchName); err != nil {
 		fmt.Println(err)
 		if _, err = repo.LookupBranch(branchName, git.BranchLocal); err != nil {
-			if _, err = repo.CreateBranch(branchName, head, false); err != nil {
+			var branch *git.Branch
+			if branch, err = repo.CreateBranch(branchName, head, false); err != nil {
+				return
+			}
+			var commitObj *git.Object
+			if commitObj, err = branch.Peel(git.ObjectCommit); err != nil {
+				return
+			}
+			if branchCommit, err = commitObj.AsCommit(); err != nil {
 				return
 			}
 			fmt.Printf("Created branch %s...\n", branchName)
