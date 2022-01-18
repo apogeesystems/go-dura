@@ -125,6 +125,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 				return
 			}
 			fmt.Printf("Created branch %s...\n", branchName)
+			fmt.Printf("Branch commit ID: %s\n", branchCommit.Id().String())
 		}
 	}
 
