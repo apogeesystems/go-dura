@@ -206,6 +206,11 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		fmt.Println("Assigning head as parent")
 	}
 
+	//o, _ := git.NewOid("5e4abae6c281feb0b26e18b7465b91367dd3571d")
+	//if commit, err = repo.LookupCommit(o); err != nil {
+	//	return
+	//}
+
 	if oid, err = repo.CreateCommit(
 		fmt.Sprintf("refs/head/%s", branchName),
 		committer,
