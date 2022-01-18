@@ -154,12 +154,21 @@ func (c *Config) SaveToPath(filename string) (err error) {
 }
 
 func (c *Config) SetWatch(path string, cfg WatchConfig) (err error) {
-	var fileInfo os.FileInfo
+	var (
+		fileInfo os.FileInfo
+		isRepo   bool
+	)
 	if fileInfo, err = os.Stat(path); err != nil {
 		return
 	}
 	if !fileInfo.IsDir() {
 		return errors.New(fmt.Sprintf("path '%s' is not a directory", path))
+	}
+	if isRepo, err = IsRepo(path); err != nil || !isRepo {
+		if err == nil {
+			err = errors.New(fmt.Sprintf("%s is not a repo", path))
+		}
+		return
 	}
 	if c.Repositories != nil {
 		var ok bool

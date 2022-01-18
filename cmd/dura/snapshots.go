@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 	git "github.com/libgit2/git2go/v33"
+	"os"
+	"time"
 )
 
 type CaptureStatus struct {
@@ -76,8 +78,8 @@ func headPeelToCommit(repo *git.Repository) (obj *git.Commit, err error) {
 	return
 }
 
-// TODO finish implementation, look over signature/committer portion
 func Capture(path string) (cs *CaptureStatus, err error) {
+
 	var (
 		repo            *git.Repository
 		head            *git.Commit
@@ -90,11 +92,15 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		return
 	}
 
+	// Get the repo HEAD, peel to the latest Commit as "head"
 	if head, err = headPeelToCommit(repo); err != nil {
 		return
 	}
 
 	if statusCheckPass, err = statusCheck(repo); err != nil || !statusCheckPass {
+		if err == nil {
+			err = errors.New("repository status list is empty")
+		}
 		return
 	}
 
@@ -103,11 +109,21 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	} else {
 		return nil, errors.New("head.Id() was nil")
 	}
-	branchCommit, _ = findHead(repo, branchName)
 
-	if _, err = repo.LookupBranch(branchName, git.BranchLocal); err != nil {
-		if _, err = repo.CreateBranch(branchName, head, false); err != nil {
-			return
+	if branchCommit, err = findHead(repo, branchName); err != nil {
+		fmt.Println(err)
+		if _, err = repo.LookupBranch(branchName, git.BranchLocal); err != nil {
+			var branch *git.Branch
+			if branch, err = repo.CreateBranch(branchName, head, false); err != nil {
+				return
+			}
+			var commitObj *git.Object
+			if commitObj, err = branch.Peel(git.ObjectCommit); err != nil {
+				return
+			}
+			if branchCommit, err = commitObj.AsCommit(); err != nil {
+				return
+			}
 		}
 	}
 
@@ -125,18 +141,24 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		diffOpts  git.DiffOptions
 		deltas    int
 	)
-	if oldTree, err = head.Tree(); err != nil {
-		if branchCommit != nil {
-			if oldTree, err = branchCommit.Tree(); err != nil {
+	if branchCommit != nil {
+		if oldTree, err = branchCommit.Tree(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to retrieve branchCommit tree: %s\n", err.Error())
+			if oldTree, err = head.Tree(); err != nil {
 				return
 			}
 		}
-		return
+	} else {
+		if oldTree, err = head.Tree(); err != nil {
+			return
+		}
 	}
+
 	if diffOpts, err = git.DefaultDiffOptions(); err != nil {
 		return
 	}
 	diffOpts.Flags = git.DiffIncludeUntracked
+	diffOpts.Pathspec = []string{"*"}
 
 	if dirtyDiff, err = repo.DiffTreeToIndex(
 		oldTree,
@@ -146,6 +168,9 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		return
 	}
 	if deltas, err = dirtyDiff.NumDeltas(); err != nil || deltas == 0 {
+		if err == nil {
+			err = errors.New("no differences detected")
+		}
 		return
 	}
 
@@ -153,16 +178,17 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		treeOid *git.Oid
 		tree    *git.Tree
 	)
-	if treeOid, err = index.WriteTree(); err != nil {
+	if treeOid, err = index.WriteTreeTo(repo); err != nil {
 		return
 	}
 	if tree, err = repo.LookupTree(treeOid); err != nil {
 		return
 	}
 
-	var committer *git.Signature
-	if committer, err = repo.DefaultSignature(); err != nil {
-		return
+	var committer = &git.Signature{
+		Name:  getGitAuthor(repo),
+		Email: getGitEmail(repo),
+		When:  time.Time{},
 	}
 
 	var (
@@ -172,15 +198,15 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	if branchCommit != nil {
 		commit = branchCommit
 	}
+
 	if oid, err = repo.CreateCommit(
-		fmt.Sprintf("refs/head/%s", branchName),
+		fmt.Sprintf("refs/heads/%s", branchName),
 		committer,
 		committer,
 		message,
 		tree,
 		commit,
 	); err != nil {
-		fmt.Println("repo.CreateCommit failed")
 		return
 	}
 

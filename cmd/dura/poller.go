@@ -22,11 +22,18 @@ func processDirectory(currentPath string) (err error) {
 	latency := float32(time.Since(start))
 
 	operation = Operation{OperationSnapshot{
-		repo:    currentPath,
-		op:      op,
-		error:   err,
-		latency: latency,
+		Repo:    currentPath,
+		Latency: latency,
 	}}
+
+	if op != nil {
+		operation.Snapshot.Op = op
+	}
+
+	if err != nil {
+		errStr := err.Error()
+		operation.Snapshot.Error = &errStr
+	}
 
 	if operation.ShouldLog() {
 		var bytes []byte
@@ -52,10 +59,9 @@ func doTask() {
 	//	os.Exit(0)
 	//}
 	var repo string
-	for repo, _ = range config.GitRepos() {
-		fmt.Printf("\nProcessing: '%s'\n", repo)
+	for repo = range config.GitRepos() {
 		if err = processDirectory(repo); err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
+			fmt.Fprintf(os.Stderr, "ERROR: %s\n", err.Error())
 		}
 	}
 }

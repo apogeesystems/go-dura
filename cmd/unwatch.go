@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/apogeesystems/go-dura/cmd/dura"
 
 	"github.com/spf13/cobra"
 )
@@ -24,28 +25,28 @@ import (
 // unwatchCmd represents the unwatch command
 var unwatchCmd = &cobra.Command{
 	Use:   "unwatch",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Removes git repositories from Dura watch routines",
+	Long: `The unwatch command removes the given paths, which are to be paths to directories representing git repositories, from the Dura configuration.
+These should be repositories already listed in the Dura configuration. If more than one path is provided, each path/repository will be evaluated in the order 
+in which they were provided.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+This function loops through the paths one-by-one calling the appropriate unwatch command which returns an error if something went wrong. If the skip flag was not 
+set, an error will force the CLI to exit.`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("unwatch called")
+		for _, path := range args {
+			err = dura.GetConfig().SetUnwatch(path)
+			if !skip {
+				cobra.CheckErr(err)
+			} else {
+				fmt.Println(err)
+			}
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(unwatchCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// unwatchCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// unwatchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	watchCmd.Flags().BoolVarP(&skip, "skip", "s", false, "When this flag is present, if an error occurs while processing a repository, the watch command will print the error and continue rather than exiting. (default: false)")
 }
