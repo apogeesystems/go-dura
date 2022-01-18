@@ -152,6 +152,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	if cc, err = ob.AsCommit(); err != nil {
 		return
 	}
+
 	fmt.Sprintf("REFERENCE ID: %s\n", cc.Id().String())
 
 	var index *git.Index
@@ -225,7 +226,6 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	)
 	if branchCommit != nil {
 		fmt.Println("Assigning branchCommit as parent")
-
 		commit = branchCommit
 	} else {
 		fmt.Println("Assigning head as parent")
