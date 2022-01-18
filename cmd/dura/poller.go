@@ -63,7 +63,7 @@ func doTask() {
 	//	os.Exit(0)
 	//}
 	var repo string
-	for repo, _ = range config.GitRepos() {
+	for repo = range config.GitRepos() {
 		fmt.Printf("\nProcessing: '%s'\n", repo)
 		if err = processDirectory(repo); err != nil {
 			fmt.Fprintf(os.Stderr, "ERROR: %s\n", err.Error())
