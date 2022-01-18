@@ -17,35 +17,71 @@ package cmd
 
 import (
 	"fmt"
-
+	"github.com/apogeesystems/go-dura/cmd/dura"
 	"github.com/spf13/cobra"
+	"os"
+	"strings"
+)
+
+var (
+	maxDepth    int
+	include     []string
+	exclude     []string
+	force       bool
+	skip        bool
+	defMaxDepth = 255
 )
 
 // watchCmd represents the watch command
 var watchCmd = &cobra.Command{
 	Use:   "watch",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Adds git repositories for Dura to watch",
+	Long: `The watch command adds the given paths, which are to be paths to directories representing git repositories, to the Dura configuration. 
+If more than one path is provided, the include, exclude and max-depth watch configuration settings will be applied to each of the repositories provided.
+If the force flag is not provided the CLI will prompt for the user to accept these changes.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+This function loops through the paths provided one-by-one calling the appropriate watch command which returns an error each time, the paths will be accessed in the 
+order they were provided but if one should produce an error, and the skip flag was not provided, the entire CLI will exit. Additionally, for each watch command execution, the configuration file is 
+written and then re-read this is due to the fact that this command should *usually* be executed once per repository but the added functionality to specify more is
+for convenience.`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("watch called")
+		if len(args) > 1 && (len(include) > 0 || len(exclude) > 0) && !force {
+			yn := "n"
+			fmt.Scanf("Apply the same watch configuration to all of these repositories? (y/N): %s", &yn)
+			if strings.ToLower(yn)[0:1] == "n" {
+				return
+			}
+		}
+		if maxDepth < 0 || maxDepth > 255 {
+			fmt.Fprintln(os.Stderr, "Max depth must be between 0-255, setting value back to the default (255)")
+			maxDepth = defMaxDepth
+		}
+		for _, path := range args {
+			err = dura.GetConfig().SetWatch(path, dura.WatchConfig{
+				Include:  include,
+				Exclude:  exclude,
+				MaxDepth: maxDepth,
+			})
+			if !skip {
+				cobra.CheckErr(err)
+			} else if err != nil {
+				fmt.Println(err)
+			}
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(watchCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// watchCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// watchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	watchCmd.Flags().IntVarP(&maxDepth, "max-depth", "d", defMaxDepth, "Set recursion max depth, value must be between 0-255. (default: 255)")
+	watchCmd.Flags().StringSliceVarP(&include, "include", "i", []string{}, `A comma separated list of gitignore strings representing files/folders to explicitly include in watch routines.
+Example: -i "**/.log,/dura,tests/theTests*.test"
+(default: [])`)
+	watchCmd.Flags().StringSliceVarP(&exclude, "exclude", "e", []string{}, `A comma separated list of gitignore strings representing files/folders to explicitly exclude in watch routines.
+Example: -e "**/.log,/dura,tests/theTests*.test"
+(default: [])`)
+	watchCmd.Flags().BoolVarP(&force, "force", "f", false, "Forces the watch action without asking for input (in the case where multiple arguments are provided). (default: false)")
+	watchCmd.Flags().BoolVarP(&skip, "skip", "s", false, "When this flag is present, if an error occurs while processing a repository, the watch command will print the error and continue rather than exiting. (default: false)")
 }
