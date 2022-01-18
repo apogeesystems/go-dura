@@ -121,6 +121,13 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			if branch, err = repo.CreateBranch(branchName, head, false); err != nil {
 				return
 			}
+			var name string
+			if name, err = branch.Name(); err != nil {
+				return
+			}
+			fmt.Printf("Branch Name: %s\n", name)
+			fmt.Printf("Branch target: %s\n", branch.Target().String())
+			fmt.Printf("Branch Shorthand: %s\n", branch.Shorthand())
 			var commitObj *git.Object
 			if commitObj, err = branch.Peel(git.ObjectCommit); err != nil {
 				return
@@ -205,6 +212,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	)
 	if branchCommit != nil {
 		fmt.Println("Assigning branchCommit as parent")
+
 		commit = branchCommit
 	} else {
 		fmt.Println("Assigning head as parent")
