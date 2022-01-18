@@ -19,10 +19,8 @@ import (
 	"errors"
 	"fmt"
 	git "github.com/libgit2/git2go/v33"
-)
-
-var (
-	latest = map[string]*git.Oid{}
+	"os"
+	"time"
 )
 
 type CaptureStatus struct {
@@ -56,7 +54,6 @@ func statusCheck(repo *git.Repository) (ok bool, err error) {
 		return
 	}
 	if count > 0 {
-		fmt.Printf("Diffs found: %d\n", count)
 		ok = true
 	} else {
 		ok = false
@@ -81,8 +78,8 @@ func headPeelToCommit(repo *git.Repository) (obj *git.Commit, err error) {
 	return
 }
 
-// TODO finish implementation, look over signature/committer portion
 func Capture(path string) (cs *CaptureStatus, err error) {
+
 	var (
 		repo            *git.Repository
 		head            *git.Commit
@@ -102,14 +99,13 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 
 	if statusCheckPass, err = statusCheck(repo); err != nil || !statusCheckPass {
 		if err == nil {
-			err = errors.New("repository did not pass status check, i.e. status list was empty for the repository")
+			err = errors.New("repository status list is empty")
 		}
 		return
 	}
 
 	if head.Id() != nil {
 		branchName = fmt.Sprintf("dura/%s", head.Id().String())
-		fmt.Printf("HEAD ID: %s\n", head.Id().String())
 	} else {
 		return nil, errors.New("head.Id() was nil")
 	}
@@ -128,25 +124,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			if branchCommit, err = commitObj.AsCommit(); err != nil {
 				return
 			}
-			fmt.Printf("Created branch %s...\n", branchName)
-			fmt.Printf("Branch commit ID: %s\n", branchCommit.Id().String())
 		}
-	}
-
-	var ref *git.Reference
-	fmt.Printf("Looking for ref: /refs/head/%s\n", branchName)
-	if ref, err = repo.References.Lookup(fmt.Sprintf("refs/head/%s", branchName)); err == nil {
-		var ob *git.Object
-		if ob, err = ref.Peel(git.ObjectCommit); err != nil {
-			return
-		}
-		var cc *git.Commit
-		if cc, err = ob.AsCommit(); err != nil {
-			return
-		}
-		fmt.Sprintf("REFERENCE ID: %s\n", cc.Id().String())
-	} else {
-		fmt.Println(err)
 	}
 
 	var index *git.Index
@@ -165,7 +143,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	)
 	if branchCommit != nil {
 		if oldTree, err = branchCommit.Tree(); err != nil {
-			fmt.Printf("Failed to retrieve branchCommit tree: %s\n", err.Error())
+			fmt.Fprintf(os.Stderr, "Failed to retrieve branchCommit tree: %s\n", err.Error())
 			if oldTree, err = head.Tree(); err != nil {
 				return
 			}
@@ -181,7 +159,6 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	}
 	diffOpts.Flags = git.DiffIncludeUntracked
 	diffOpts.Pathspec = []string{"*"}
-	//fmt.Printf("diffOpts:\n%+v\n\n", diffOpts)
 
 	if dirtyDiff, err = repo.DiffTreeToIndex(
 		oldTree,
@@ -192,11 +169,10 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	}
 	if deltas, err = dirtyDiff.NumDeltas(); err != nil || deltas == 0 {
 		if err == nil {
-			err = errors.New("dirtyDiff has zero deltas")
+			err = errors.New("no differences detected")
 		}
 		return
 	}
-	//fmt.Printf("Current has %d deltas from index\n", deltas)
 
 	var (
 		treeOid *git.Oid
@@ -209,9 +185,10 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		return
 	}
 
-	var committer *git.Signature
-	if committer, err = repo.DefaultSignature(); err != nil {
-		return
+	var committer = &git.Signature{
+		Name:  getGitAuthor(repo),
+		Email: getGitEmail(repo),
+		When:  time.Time{},
 	}
 
 	var (
@@ -219,36 +196,19 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		commit = head
 	)
 	if branchCommit != nil {
-		fmt.Println("Assigning branchCommit as parent")
 		commit = branchCommit
-	} else {
-		fmt.Println("Assigning head as parent")
-	}
-	var ok bool
-	if oid, ok = latest[path]; ok {
-		fmt.Println("Using latest map")
-
-		if commit, err = repo.LookupCommit(oid); err != nil {
-			return
-		}
 	}
 
 	if oid, err = repo.CreateCommit(
-		fmt.Sprintf("refs/head/%s", branchName),
+		fmt.Sprintf("refs/heads/%s", branchName),
 		committer,
 		committer,
 		message,
 		tree,
 		commit,
 	); err != nil {
-		fmt.Println("repo.CreateCommit failed")
-		fmt.Println(err)
 		return
 	}
-
-	latest[path] = oid
-
-	fmt.Println("repo.CreateCommit successful")
 
 	cs = &CaptureStatus{
 		DuraBranch: branchName,
@@ -264,7 +224,6 @@ func findHead(repo *git.Repository, branchName string) (head *git.Commit, err er
 	if branch, err = repo.LookupBranch(branchName, git.BranchLocal); err != nil {
 		return
 	} else {
-		fmt.Printf("Branch %s found...\n", branchName)
 		var headObj *git.Object
 		if headObj, err = branch.Peel(git.ObjectCommit); err != nil {
 			return
@@ -272,7 +231,6 @@ func findHead(repo *git.Repository, branchName string) (head *git.Commit, err er
 		if head, err = headObj.AsCommit(); err != nil {
 			return
 		}
-		fmt.Printf("branchCommit head commit ID: %s\n", head.Id().String())
 	}
 	return
 }
