@@ -31,6 +31,7 @@ func processDirectory(currentPath string) (err error) {
 
 	fmt.Printf("Should log: %v\n", operation.ShouldLog())
 	if operation.ShouldLog() {
+		fmt.Println("I'm here")
 		var bytes []byte
 		if bytes, err = json.MarshalIndent(operation.Snapshot, "", "  "); err != nil {
 			return
