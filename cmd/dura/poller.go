@@ -29,6 +29,7 @@ func processDirectory(currentPath string) (err error) {
 		latency: latency,
 	}}
 
+	fmt.Printf("Should log: %v\n", operation.ShouldLog())
 	if operation.ShouldLog() {
 		var bytes []byte
 		if bytes, err = json.MarshalIndent(operation.Snapshot, "", "  "); err != nil {
