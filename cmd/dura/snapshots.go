@@ -125,9 +125,6 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			if name, err = branch.Name(); err != nil {
 				return
 			}
-			fmt.Printf("Branch Name: %s\n", name)
-			fmt.Printf("Branch target: %s\n", branch.Target().String())
-			fmt.Printf("Branch Shorthand: %s\n", branch.Shorthand())
 			var commitObj *git.Object
 			if commitObj, err = branch.Peel(git.ObjectCommit); err != nil {
 				return
@@ -151,7 +148,6 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			return
 		}
 		fmt.Sprintf("REFERENCE ID: %s\n", cc.Id().String())
-
 	}
 
 	var index *git.Index
