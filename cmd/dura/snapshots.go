@@ -206,6 +206,8 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		return
 	}
 
+	fmt.Println("repo.CreateCommit successful")
+
 	cs = &CaptureStatus{
 		DuraBranch: branchName,
 		CommitHash: oid.String(),
