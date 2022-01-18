@@ -211,6 +211,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	}
 	var ok bool
 	if oid, ok = latest[path]; ok {
+		fmt.Println("Using latest map")
 		if commit, err = repo.LookupCommit(oid); err != nil {
 			return
 		}
