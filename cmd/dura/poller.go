@@ -23,7 +23,7 @@ func processDirectory(currentPath string) (err error) {
 		op.Display()
 	}
 	latency := float32(time.Since(start))
-	fmt.Printf("Latency: %.3f\n", latency/1000000000) // Seconds
+	fmt.Printf("Latency: %.3fs\n", latency/1000000000) // Seconds
 
 	operation = Operation{OperationSnapshot{
 		Repo:    currentPath,
