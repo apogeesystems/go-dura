@@ -110,14 +110,13 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		return nil, errors.New("head.Id() was nil")
 	}
 	if branchCommit, err = findHead(repo, branchName); err != nil {
-		return
-	}
-
-	if _, err = repo.LookupBranch(branchName, git.BranchLocal); err != nil {
-		if _, err = repo.CreateBranch(branchName, head, false); err != nil {
-			return
+		fmt.Println(err)
+		if _, err = repo.LookupBranch(branchName, git.BranchLocal); err != nil {
+			if _, err = repo.CreateBranch(branchName, head, false); err != nil {
+				return
+			}
+			fmt.Printf("Created branch %s...\n", branchName)
 		}
-		fmt.Printf("Created branch %s...\n", branchName)
 	}
 
 	var index *git.Index
