@@ -52,7 +52,7 @@ func statusCheck(repo *git.Repository) (ok bool, err error) {
 		return
 	}
 	if count > 0 {
-		fmt.Printf("%d diffs found...\n", count)
+		fmt.Printf("Diffs found: %d\n", count)
 		ok = true
 	} else {
 		ok = false
@@ -117,6 +117,8 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			}
 			fmt.Printf("Created branch %s...\n", branchName)
 		}
+	} else {
+		fmt.Printf("Branch commit: %s\n", branchCommit.Id().String())
 	}
 
 	var index *git.Index
@@ -126,6 +128,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	if err = index.AddAll([]string{"*"}, git.IndexAddDefault, nil); err != nil {
 		return
 	}
+	fmt.Printf("Index Tree Path: %s\n", index.Path())
 
 	var (
 		dirtyDiff *git.Diff
@@ -157,6 +160,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		return
 	}
 	diffOpts.Flags = git.DiffIncludeUntracked
+	fmt.Printf("diffOpts:\n%+v\n\n", diffOpts)
 
 	if dirtyDiff, err = repo.DiffTreeToIndex(
 		oldTree,
@@ -171,6 +175,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		}
 		return
 	}
+	fmt.Printf("Current has %d deltas from index\n", deltas)
 
 	var (
 		treeOid *git.Oid
@@ -182,6 +187,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	if tree, err = repo.LookupTree(treeOid); err != nil {
 		return
 	}
+	fmt.Printf("Index Tree Path: %s\n", index.Path())
 
 	var committer *git.Signature
 	if committer, err = repo.DefaultSignature(); err != nil {
