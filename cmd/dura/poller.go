@@ -27,10 +27,17 @@ func processDirectory(currentPath string) (err error) {
 
 	operation = Operation{OperationSnapshot{
 		Repo:    currentPath,
-		Op:      op,
-		Error:   err,
 		Latency: latency,
 	}}
+
+	if op != nil {
+		operation.Snapshot.Op = op
+	}
+
+	if err != nil {
+		errStr := err.Error()
+		operation.Snapshot.Error = &errStr
+	}
 
 	if operation.ShouldLog() {
 		var bytes []byte
