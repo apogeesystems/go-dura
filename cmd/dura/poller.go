@@ -18,27 +18,23 @@ func processDirectory(currentPath string) (err error) {
 		operation Operation
 	)
 	start := time.Now()
-	if op, err = Capture(currentPath); err != nil {
-		return
-	}
+	op, err = Capture(currentPath)
 	if op != nil {
 		op.Display()
 	}
 	latency := float32(time.Since(start))
-	fmt.Printf("Latency: %.3f\n", latency/1000000000)
+	fmt.Printf("Latency: %.3f\n", latency/1000000000) // Seconds
 
 	operation = Operation{OperationSnapshot{
-		repo:    currentPath,
-		op:      op,
-		error:   err,
-		latency: latency,
+		Repo:    currentPath,
+		Op:      op,
+		Error:   err,
+		Latency: latency,
 	}}
 
-	fmt.Printf("Should log: %v\n", operation.ShouldLog())
 	if operation.ShouldLog() {
-		fmt.Println("I'm here")
 		var bytes []byte
-		if bytes, err = json.MarshalIndent(operation.Snapshot, "", "  "); err != nil {
+		if bytes, err = json.MarshalIndent(operation, "", "  "); err != nil {
 			return
 		}
 		fmt.Println(string(bytes))
