@@ -105,7 +105,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 
 	if head.Id() != nil {
 		branchName = fmt.Sprintf("dura/%s", head.Id().String())
-		fmt.Printf("HEAD branch ID: %s\n", head.Id().String())
+		fmt.Printf("HEAD ID: %s\n", head.Id().String())
 	} else {
 		return nil, errors.New("head.Id() was nil")
 	}
@@ -117,8 +117,6 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 			}
 			fmt.Printf("Created branch %s...\n", branchName)
 		}
-	} else {
-		fmt.Printf("Branch commit: %s\n", branchCommit.Id().String())
 	}
 
 	var index *git.Index
@@ -128,7 +126,6 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	if err = index.AddAll([]string{"*"}, git.IndexAddDefault, nil); err != nil {
 		return
 	}
-	fmt.Printf("Index Tree Path: %s\n", index.Path())
 
 	var (
 		dirtyDiff *git.Diff
@@ -138,6 +135,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	)
 	if branchCommit != nil {
 		if oldTree, err = branchCommit.Tree(); err != nil {
+			fmt.Printf("Failed to retrieve branchCommit tree: %s\n", err.Error())
 			if oldTree, err = head.Tree(); err != nil {
 				return
 			}
@@ -152,7 +150,8 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		return
 	}
 	diffOpts.Flags = git.DiffIncludeUntracked
-	fmt.Printf("diffOpts:\n%+v\n\n", diffOpts)
+	diffOpts.Pathspec = []string{"*"}
+	//fmt.Printf("diffOpts:\n%+v\n\n", diffOpts)
 
 	if dirtyDiff, err = repo.DiffTreeToIndex(
 		oldTree,
@@ -167,7 +166,7 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		}
 		return
 	}
-	fmt.Printf("Current has %d deltas from index\n", deltas)
+	//fmt.Printf("Current has %d deltas from index\n", deltas)
 
 	var (
 		treeOid *git.Oid
@@ -179,7 +178,6 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 	if tree, err = repo.LookupTree(treeOid); err != nil {
 		return
 	}
-	fmt.Printf("Index Tree Path: %s\n", index.Path())
 
 	var committer *git.Signature
 	if committer, err = repo.DefaultSignature(); err != nil {
@@ -191,7 +189,10 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		commit = head
 	)
 	if branchCommit != nil {
+		fmt.Println("Assigning branchCommit as parent")
 		commit = branchCommit
+	} else {
+		fmt.Println("Assigning head as parent")
 	}
 
 	if oid, err = repo.CreateCommit(
