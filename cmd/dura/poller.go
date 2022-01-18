@@ -18,10 +18,14 @@ func processDirectory(currentPath string) (err error) {
 		operation Operation
 	)
 	start := time.Now()
-	op, err = Capture(currentPath)
-	op.Display()
+	if op, err = Capture(currentPath); err != nil {
+		return
+	}
+	if op != nil {
+		op.Display()
+	}
 	latency := float32(time.Since(start))
-	fmt.Printf("Latency: %d\n", latency)
+	fmt.Printf("Latency: %.3f\n", latency/1000000000)
 
 	operation = Operation{OperationSnapshot{
 		repo:    currentPath,
