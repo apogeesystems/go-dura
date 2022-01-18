@@ -198,9 +198,10 @@ func Capture(path string) (cs *CaptureStatus, err error) {
 		oid    *git.Oid
 		commit = head
 	)
-	if branchCommit != nil {
-		commit = branchCommit
-	}
+	//if branchCommit != nil {
+	//	commit = branchCommit
+	//}
+
 	if oid, err = repo.CreateCommit(
 		fmt.Sprintf("refs/head/%s", branchName),
 		committer,
