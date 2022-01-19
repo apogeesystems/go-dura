@@ -59,14 +59,14 @@ func init() {
 	// is called directly, e.g.:
 	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	serveCmd.Flags().StringVarP(&logfile, "log-file", "l", "", `Setting this flag allows for directing Dura logs to the provided logfile destination.`)
-	serveCmd.Flags().StringVarP(&logLevel, "log-level", "x", "info", `Sets the log level to one of (from highest to lowest):
-	- panic
-	- fatal
-	- error
-	- warn
-	- info
-	- debug
-	- trace
+	serveCmd.Flags().StringVarP(&logLevel, "log-level", "z", "info", `Sets the log level to one of (from highest to lowest):
+- panic
+- fatal
+- error
+- warn
+- info
+- debug
+- trace
 
 The flag set must mach one of these string values, and if the flag provided does not match the application will exit.
 `)
