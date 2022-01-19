@@ -37,12 +37,7 @@ func processDirectory(currentPath string) (err error) {
 		Repo:    currentPath,
 		Latency: latency,
 	}}
-	log.Trace().Dict("operation.Snapshot", zerolog.Dict().Str("Repo", operation.Snapshot.Repo).Float32("Latency", operation.Snapshot.Latency).Dict(
-		"Op", zerolog.Dict().Str(
-			"DuraBranch", operation.Snapshot.Op.DuraBranch).Str(
-			"CommitHash", operation.Snapshot.Op.CommitHash).Str(
-			"BaseHash", operation.Snapshot.Op.BaseHash)).Str(
-		"Error", *operation.Snapshot.Error)).Msg("operation initialized")
+	log.Trace().Dict("operation.Snapshot", zerolog.Dict().Str("Repo", operation.Snapshot.Repo).Float32("Latency", operation.Snapshot.Latency)).Msg("operation initialized")
 
 	if op != nil {
 		log.Debug().Msg("capture call returned non-nil capture status, setting operation.Snapshot.Op field accordingly")
@@ -53,8 +48,7 @@ func processDirectory(currentPath string) (err error) {
 			"Op", zerolog.Dict().Str(
 				"DuraBranch", operation.Snapshot.Op.DuraBranch).Str(
 				"CommitHash", operation.Snapshot.Op.CommitHash).Str(
-				"BaseHash", operation.Snapshot.Op.BaseHash)).Str(
-			"Error", *operation.Snapshot.Error)).Msg("operation.Snapshot.Op field set")
+				"BaseHash", operation.Snapshot.Op.BaseHash))).Msg("operation.Snapshot.Op field set")
 	}
 
 	if err != nil {
@@ -63,11 +57,7 @@ func processDirectory(currentPath string) (err error) {
 		operation.Snapshot.Error = &errStr
 		log.Trace().Dict("operation.Snapshot", zerolog.Dict().Str(
 			"Repo", operation.Snapshot.Repo).Float32(
-			"Latency", operation.Snapshot.Latency).Dict(
-			"Op", zerolog.Dict().Str(
-				"DuraBranch", operation.Snapshot.Op.DuraBranch).Str(
-				"CommitHash", operation.Snapshot.Op.CommitHash).Str(
-				"BaseHash", operation.Snapshot.Op.BaseHash)).Str(
+			"Latency", operation.Snapshot.Latency).Str(
 			"Error", *operation.Snapshot.Error))
 	}
 
