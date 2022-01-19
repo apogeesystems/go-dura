@@ -65,7 +65,8 @@ func processDirectory(currentPath string) (err error) {
 	if operation.ShouldLog() {
 		log.Debug().Msg("operation marked for logging")
 		var bytes []byte
-		if bytes, err = json.MarshalIndent(operation, "", "  "); err != nil {
+		//if bytes, err = json.MarshalIndent(operation, "", "  "); err != nil {
+		if bytes, err = json.Marshal(operation); err != nil {
 			log.Error().Err(err).Msg("Error occurred while JSON marshalling operation")
 			return
 		}
