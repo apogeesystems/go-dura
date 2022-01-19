@@ -48,5 +48,5 @@ set, an error will force the CLI to exit.`,
 func init() {
 	rootCmd.AddCommand(unwatchCmd)
 
-	watchCmd.Flags().BoolVarP(&skip, "skip", "s", false, "When this flag is present, if an error occurs while processing a repository, the watch command will print the error and continue rather than exiting. (default: false)")
+	unwatchCmd.Flags().BoolVarP(&skip, "skip", "s", false, "When this flag is present, if an error occurs while processing a repository, the watch command will print the error and continue rather than exiting. (default: false)")
 }
