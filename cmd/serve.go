@@ -17,7 +17,9 @@ package cmd
 
 import (
 	"github.com/apogeesystems/go-dura/cmd/dura"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 // serveCmd represents the serve command
@@ -31,12 +33,17 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		err = dura.SetGlobalLogLevel(logLevel)
+		cobra.CheckErr(err)
+		log.Logger = log.With().Caller().Logger()
+		log.Info().Msgf("Global log level set: %s", strings.ToUpper(logLevel))
 		dura.StartPoller()
 	},
 }
 
 var (
-	logfile string
+	logfile  string
+	logLevel string
 )
 
 func init() {
@@ -51,5 +58,16 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	serveCmd.Flags().StringVarP(&logfile, "logfile", "l", "", `Setting this flag allows for directing Dura logs to the provided logfile destination.`)
+	serveCmd.Flags().StringVarP(&logfile, "log-file", "l", "", `Setting this flag allows for directing Dura logs to the provided logfile destination.`)
+	serveCmd.Flags().StringVarP(&logLevel, "log-level", "z", "info", `Sets the log level to one of (from highest to lowest):
+- panic
+- fatal
+- error
+- warn
+- info
+- debug
+- trace
+
+The flag set must mach one of these string values, and if the flag provided does not match the application will exit.
+`)
 }
